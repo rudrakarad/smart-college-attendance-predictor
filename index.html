@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart College Attendance Predictor | Hackathon Edition</title>
+  <meta name="description" content="AI & Mathematics-Powered College Attendance Risk Engine, Safe Bunk Predictor & Recovery Calculator.">
+  
+  <!-- Google Fonts & Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">🎓</div>
+        <div class="brand-text">
+          <h1>Smart Attendance Predictor</h1>
+        </div>
+        <span class="brand-badge">Hackathon Edition v2.0</span>
+      </div>
+
+      <div class="header-actions">
+        <!-- Target Selection -->
+        <div class="target-select-wrapper">
+          <label for="targetThreshold">Target Criteria:</label>
+          <select id="targetThreshold" class="select-input">
+            <option value="75" selected>75% Standard Requirement</option>
+            <option value="80">80% Strict / Lab Target</option>
+            <option value="85">85% Honors / Scholarship</option>
+            <option value="90">90% Gold Medalist Target</option>
+          </select>
+        </div>
+
+        <!-- Presets Quick Select -->
+        <div class="target-select-wrapper">
+          <label for="presetSelect">Demo Presets:</label>
+          <select id="presetSelect" class="select-input">
+            <option value="cs_sem5">CS Sem 5 (Standard)</option>
+            <option value="defaulter_demo">Defaulter Recovery Case</option>
+            <option value="scholar_demo">High Attender Scholar</option>
+          </select>
+        </div>
+
+        <button id="btnExport" class="btn btn-secondary btn-sm" title="Export profile to JSON">📥 Export</button>
+        <button id="btnImport" class="btn btn-secondary btn-sm" title="Import profile from JSON">📤 Import</button>
+        <button id="btnReset" class="btn btn-outline-danger btn-sm" title="Reset all data">🔄 Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <!-- Active Demo Banner -->
+    <div class="preset-banner">
+      <div class="preset-info">
+        <span class="preset-icon">⚡</span>
+        <div>
+          <div id="presetTitle" class="preset-title">Active Dataset: CS Engineering 5th Semester</div>
+          <div id="presetDesc" class="preset-desc">Interactive Attendance Risk Predictor & What-If Simulator initialized.</div>
+        </div>
+      </div>
+      <div class="preset-buttons">
+        <button id="btnAddSubjectTop" class="btn btn-primary btn-sm">+ Add New Subject</button>
+        <button id="btnAddExemptionTop" class="btn btn-secondary btn-sm">+ Log Duty/Medical Leave</button>
+      </div>
+    </div>
+
+    <!-- Overview Stat Cards -->
+    <div class="stats-grid">
+      <!-- Card 1: Overall Percentage & Gauge -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-title">Overall Attendance</span>
+          <div class="stat-icon-bg" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">📊</div>
+        </div>
+        <div id="statOverallPct" class="stat-value">0%</div>
+        <div id="statConductedSubtext" class="stat-subtext">0 Attended / 0 Conducted</div>
+      </div>
+
+      <!-- Card 2: Risk Level Badge -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-title">Attendance Risk Level</span>
+          <div class="stat-icon-bg" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">🛡️</div>
+        </div>
+        <div style="margin: 8px 0;">
+          <span id="statRiskBadge" class="risk-badge risk-safe">SAFE ZONE</span>
+        </div>
+        <div id="statRiskSubtext" class="stat-subtext">Maintaining comfortable margin over target</div>
+      </div>
+
+      <!-- Card 3: Safe Skips / Bunk Calculator -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-title">Safe Bunks Left</span>
+          <div class="stat-icon-bg" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">🏖️</div>
+        </div>
+        <div id="statBunksLeft" class="stat-value" style="color: var(--status-warning);">0</div>
+        <div id="statBunksSubtext" class="stat-subtext">Lectures you can skip without dropping below target</div>
+      </div>
+
+      <!-- Card 4: Required Recovery Lectures -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-title">Recovery Target</span>
+          <div class="stat-icon-bg" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">🎯</div>
+        </div>
+        <div id="statRecoveryNeeded" class="stat-value" style="color: var(--accent-cyan);">0</div>
+        <div id="statRecoverySubtext" class="stat-subtext">Consecutive classes needed to reach target</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="tab-dashboard">📌 Subject Breakdown</button>
+      <button class="tab-btn" data-tab="tab-simulator">🧪 What-If Simulator</button>
+      <button class="tab-btn" data-tab="tab-timetable">📅 Timetable Logger</button>
+      <button class="tab-btn" data-tab="tab-exemptions">🏥 Duty & Medical Buffer</button>
+      <button class="tab-btn" data-tab="tab-analytics">📈 Analytics & Forecast</button>
+    </div>
+
+    <!-- TAB 1: Subject Breakdown & Quick Calculator -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="dashboard-grid">
+        
+        <!-- Left: Subject Table -->
+        <div class="card">
+          <div class="card-title-row">
+            <div class="card-title">
+              <span>📚 Subject-wise Attendance Tracking</span>
+            </div>
+            <button id="btnOpenAddSubjectModal" class="btn btn-primary btn-sm">+ Add Subject</button>
+          </div>
+
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Type</th>
+                  <th>Attended / Total</th>
+                  <th>Percentage</th>
+                  <th>Risk Status</th>
+                  <th>Safe / Recovery</th>
+                  <th>Quick Log</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subjectTableBody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right Side: Risk Summary & Quick Bunk Engine -->
+        <div>
+          <!-- Quick Bunk Calculator Widget -->
+          <div class="card">
+            <div class="card-title">
+              <span>⚡ Safe Bunk & Recovery Engine</span>
+            </div>
+
+            <div class="calc-box">
+              <div class="calc-box-title">🏖️ Maximum Safe Misses</div>
+              <p style="font-size: 0.82rem; color: var(--text-muted);">If you attend all upcoming lectures until now, you can skip:</p>
+              <div id="calcSafeBunkResult" class="calc-result-badge" style="color: var(--status-warning);">0 Lectures</div>
+            </div>
+
+            <div class="calc-box" style="margin-top: 14px;">
+              <div class="calc-box-title">🚨 Defaulter Catch-Up Plan</div>
+              <p style="font-size: 0.82rem; color: var(--text-muted);">To reach your overall target percentage, you MUST attend:</p>
+              <div id="calcRecoveryResult" class="calc-result-badge" style="color: var(--accent-cyan);">0 Next Classes</div>
+            </div>
+
+            <div class="calc-box" style="margin-top: 14px; background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.2);">
+              <div class="calc-box-title">📊 Overall Weight Distribution</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">
+                Theory Subjects: <strong id="lblTheoryCount" style="color: #fff;">0</strong> | Lab Sessions: <strong id="lblLabCount" style="color: #fff;">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: What-If Simulator -->
+    <div id="tab-simulator" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>🧪 Interactive "What-If" Scenario Simulator</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+          Simulate future attendance outcomes! Test scenarios like <em>"What if I miss the next 4 lectures of Operating Systems?"</em> or <em>"What if I attend 10 consecutive classes?"</em>
+        </p>
+
+        <div class="simulator-container">
+          <!-- Controls Column -->
+          <div>
+            <div class="form-group">
+              <label for="simSubjectSelect">Select Subject for Simulation:</label>
+              <select id="simSubjectSelect" class="select-input form-control">
+                <option value="all">Entire Semester (Overall Attendance)</option>
+                <!-- Subjects populated dynamically -->
+              </select>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="slider-label">Future Lectures to ATTEND:</span>
+                <span id="lblSimAttendVal" class="slider-val">0</span>
+              </div>
+              <input type="range" id="simAttendRange" class="custom-range" min="0" max="30" value="0">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="slider-label">Future Lectures to MISS / BUNK:</span>
+                <span id="lblSimMissVal" class="slider-val">0</span>
+              </div>
+              <input type="range" id="simMissRange" class="custom-range" min="0" max="30" value="0">
+            </div>
+
+            <button id="btnResetSim" class="btn btn-secondary btn-sm" style="margin-top: 10px;">🔄 Reset Sliders</button>
+          </div>
+
+          <!-- Result Column -->
+          <div class="projection-card">
+            <span style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Simulated Attendance Outcome</span>
+            <div id="simProjectedPct" class="proj-percentage" style="color: var(--accent-primary);">75.0%</div>
+            <div style="margin-bottom: 12px;">
+              <span id="simRiskBadge" class="risk-badge risk-safe">SAFE ZONE</span>
+            </div>
+            <div id="simImpactSummary" style="font-size: 0.88rem; color: var(--text-muted);">
+              Current: <strong id="lblSimCurrent" style="color: #fff;">0%</strong> ➔ Projected: <strong id="lblSimProjected" style="color: #fff;">0%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Timetable Logger -->
+    <div id="tab-timetable" class="tab-content">
+      <div class="card">
+        <div class="card-title-row">
+          <div class="card-title">
+            <span>📅 Weekly Class Timetable & Quick Attendance Logger</span>
+          </div>
+          <span style="font-size: 0.82rem; color: var(--text-muted);">Click Present / Absent to instantly record today's class!</span>
+        </div>
+
+        <div id="timetableGrid" class="timetable-grid">
+          <!-- Rendered via JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Exemptions & Medical Leave -->
+    <div id="tab-exemptions" class="tab-content">
+      <div class="card">
+        <div class="card-title-row">
+          <div class="card-title">
+            <span>🏥 Duty Leave & Medical Exemption Buffer</span>
+          </div>
+          <button id="btnOpenExemptionModal" class="btn btn-primary btn-sm">+ Log New Exemption</button>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px;">
+          Approved medical leaves and official duty (OD) notes reduce penalized absences from your record, safeguarding your attendance ratio.
+        </p>
+
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Reason / Certificate</th>
+                <th>Count (Lectures)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="exemptionTableBody">
+              <!-- Rendered via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: Analytics & Forecast -->
+    <div id="tab-analytics" class="tab-content">
+      <div class="dashboard-grid">
+        
+        <!-- Subject Comparison Chart -->
+        <div class="card">
+          <div class="card-title">
+            <span>📊 Subject Attendance Comparison</span>
+          </div>
+          <div class="chart-box">
+            <canvas id="chartSubjectComparison"></canvas>
+          </div>
+        </div>
+
+        <!-- Risk Distribution Chart -->
+        <div class="card">
+          <div class="card-title">
+            <span>🛡️ Risk Level Distribution</span>
+          </div>
+          <div class="chart-box">
+            <canvas id="chartRiskDistribution"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Add / Edit Subject -->
+  <div id="modalSubject" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalSubjectTitle" style="font-size: 1.1rem; color: #fff;">Add New Subject</h3>
+        <button id="btnCloseSubjectModal" class="modal-close">&times;</button>
+      </div>
+
+      <form id="formSubject">
+        <input type="hidden" id="subjectEditId" value="">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="subCode">Subject Code:</label>
+            <input type="text" id="subCode" class="text-input form-control" placeholder="e.g. CS501" required>
+          </div>
+          <div class="form-group">
+            <label for="subType">Type:</label>
+            <select id="subType" class="select-input form-control">
+              <option value="theory">Theory</option>
+              <option value="lab">Lab Session</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="subName">Subject Name:</label>
+          <input type="text" id="subName" class="text-input form-control" placeholder="e.g. Database Systems" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="subAttended">Attended Lectures:</label>
+            <input type="number" id="subAttended" class="number-input form-control" min="0" value="0" required>
+          </div>
+          <div class="form-group">
+            <label for="subTotal">Total Conducted:</label>
+            <input type="number" id="subTotal" class="number-input form-control" min="0" value="0" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="subTarget">Target % Threshold:</label>
+            <input type="number" id="subTarget" class="number-input form-control" min="50" max="100" value="75" required>
+          </div>
+          <div class="form-group">
+            <label for="subCredits">Credits Weightage:</label>
+            <input type="number" id="subCredits" class="number-input form-control" min="1" max="6" value="4" required>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+          <button type="button" id="btnCancelSubjectModal" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Subject</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Exemption -->
+  <div id="modalExemption" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; color: #fff;">Log Duty / Medical Exemption</h3>
+        <button id="btnCloseExemptionModal" class="modal-close">&times;</button>
+      </div>
+
+      <form id="formExemption">
+        <div class="form-group">
+          <label for="exSubject">Subject:</label>
+          <select id="exSubject" class="select-input form-control" required>
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="exDate">Date:</label>
+            <input type="date" id="exDate" class="text-input form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="exCount">Lecture Count:</label>
+            <input type="number" id="exCount" class="number-input form-control" min="1" max="10" value="1" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exReason">Reason / Duty Leave Ref:</label>
+          <input type="text" id="exReason" class="text-input form-control" placeholder="e.g. Medical Certificate #402, Sports Meet" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+          <button type="button" id="btnCancelExemptionModal" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Log Exemption</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Import Data -->
+  <div id="modalImport" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; color: #fff;">Import JSON Profile Data</h3>
+        <button id="btnCloseImportModal" class="modal-close">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label for="importJsonArea">Paste Exported Profile JSON:</label>
+        <textarea id="importJsonArea" class="text-input form-control" rows="8" placeholder="{ ... }"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+        <button type="button" id="btnCancelImportModal" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="btnConfirmImport" class="btn btn-primary">Apply Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>Smart College Attendance Predictor & Risk Analysis Engine &bull; Hackathon Solution &bull; Built with HTML5, CSS3 Glassmorphism & ES6 JS</p>
+  </footer>
+
+  <script src="sampleData.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
