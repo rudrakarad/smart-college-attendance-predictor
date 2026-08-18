@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🎓 Smart College Attendance Predictor & Risk Analysis Engine
 
 > **Hackathon Solution**  
@@ -92,9 +91,5 @@ $$\implies R = \left\lceil \frac{T \times \text{Total Conducted} - 100 \times (\
 3. Open your browser and navigate to `http://localhost:8080`.
 4. Try out the pre-loaded **Demo Presets**:
    - **CS Sem 5 (Standard)**
-   - **Defaulter Recovery Case**
    - **High Attender Scholar**
-=======
-# smart-college-attendance-predictor
-Hackathon practice project
->>>>>>> 74365f7c5f8094665e0de06d101c319e1cda3609
+   - **Defaulter Recovery Case**
